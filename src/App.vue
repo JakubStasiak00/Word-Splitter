@@ -4,13 +4,12 @@
     <p class="subtitle">Extract and count words used in the text the easy way !</p>
   </header>
   <form class="text-provider" name="text-provider" @submit="prevDefault">
-      <label class="text-provider__label" for="text-to-edit">Enter your text here:</label>
-      <textarea required class='text-provider__area' name="text-to-edit" id="text-to-edit"></textarea>
-      <button class="text-provider__bttn" @click="splitWords">Split &amp; count</button>
-      <button class="text-provider__bttn" @click="reseting">Reset</button>
+    <label class="text-provider__label" for="text-to-edit">Enter your text here:</label>
+    <textarea ref="area" required class='text-provider__area' name="text-to-edit" id="text-to-edit"></textarea>
+    <button class="text-provider__bttn" @click="splitWords">Split &amp; count</button>
+    <button class="text-provider__bttn" @click="reseting">Reset</button>
   </form>
-  <Formatter v-if="wordArray.length" :wordArray="wordArray" />
-
+  <Formatter ref="compFormatter" :fArray="finalArray" />
 </template>
 
 <script>
@@ -23,33 +22,76 @@ export default {
   components: {
     Formatter
   },
+
   setup() {
-    let wordArray = ref([])
+    // variables //
+    let wordArray = []
+    let finalArray = ref([])
+    const area = ref(null)
 
-    const splitWords = () => { // mount Formatter component when data is provided and user submits form
+    // functions //
 
-      const area = document.querySelector('#text-to-edit')
-      if(!area.value) {
+    const numering = (a, b) => {
+      return b.count - a.count
+    }
+
+    const formatText = text => {
+      return text.replace(/\W/g, ' ').replace(/\s\s+/g, ' ').trim()
+    }
+
+    const pushing = (elem) => {
+      finalArray.value.push(
+            {
+              name: elem,
+              count: 1
+            }
+          )
+    }
+
+    const { prevDefault } = usePrevention()
+
+    const splitWords = () => {
+
+      wordArray = []
+      finalArray.value = []
+
+      if (!area.value.value) {
         return
       }
-      let textToSplit = area.value;
-      console.log(textToSplit)
 
-      textToSplit = textToSplit.replace(/\W/g, ' ')  // replace punctation marks with spaces
-      textToSplit = textToSplit.replace(/\s\s+/g, ' ')  // replace mulitiple spaces, tabs etc. with one space
-      textToSplit = textToSplit.trim() // get rid of spaces from the beggining and end of the string 
+      let textToSplit = formatText(area.value.value);
 
-      wordArray.value = textToSplit.split(' ')
-        console.log(wordArray.value)
+      wordArray = textToSplit.split(' ')
+
+      wordArray.forEach(element => {
+        if (!finalArray.value.length) {
+          pushing(element)
+        } else {
+          let wasFound = false
+
+          finalArray.value.forEach(e => {
+            if (e.name === element) {
+              e.count++
+              wasFound = true
+              return
+            }
+          })
+
+          if (!wasFound) {
+            pushing(element)
+          }
+        }
+      })
+
+      finalArray.value = finalArray.value.sort(numering)
+
     }
-
-    const { prevDefault } = usePrevention() // prevent page from refreshing on form submission
 
     const reseting = () => {
-      location.reload()
+      area.value.value = ''
     }
 
-    return { splitWords, prevDefault, wordArray, reseting}
+    return { splitWords, prevDefault, reseting, area, finalArray }
 
   }
 
@@ -68,6 +110,7 @@ $color-sub: #1d7a44;
   color: #2c3e50;
   margin-top: 60px;
 }
+
 .header {
   margin-bottom: 3rem;
 }
@@ -86,35 +129,31 @@ $color-sub: #1d7a44;
   color: $color-sub;
 }
 
-.text-provider{
+.text-provider {
   display: flex;
   flex-direction: column;
 
-    & * {
-      margin: 0 auto;
-    }
+  & * {
+    margin: 0 auto;
+  }
 
-    &__area {
-      width: clamp(5rem, 3rem + 80vw, 80%);
-      resize: none;
-      min-height: 10rem;
-      margin-block: 1rem;
-    }
+  &__area {
+    width: clamp(5rem, 3rem + 80vw, 80%);
+    resize: none;
+    min-height: 10rem;
+    margin-block: 1rem;
+  }
 
-    &__label {
+  &__bttn {
+    border: 3px solid $color-name;
+    border-radius: 0.4rem;
+    color: $color-sub;
+    width: 10rem;
+    text-transform: capitalize;
+    padding: 0.5rem 1rem;
+    line-height: 1.3rem;
+    margin-bottom: 1rem;
 
-    }
-
-    &__bttn {
-      border: 3px solid $color-name;
-      border-radius: 0.4rem;
-      color: $color-sub;
-      width: 10rem;
-      text-transform: capitalize;
-      padding: 0.5rem 1rem;
-      line-height: 1.3rem;
-      margin-bottom: 1rem;
-
-    }
+  }
 }
 </style>
