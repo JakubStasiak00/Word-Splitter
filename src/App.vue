@@ -3,99 +3,73 @@
     <h1 class="appname">Word Splitter</h1>
     <p class="subtitle">Extract and count words used in the text the easy way !</p>
   </header>
-  <form class="text-provider" name="text-provider" @submit="prevDefault">
+  <form class="text-provider" name="text-provider" @submit.prevent="changeHandler(area.value)">
     <label class="text-provider__label" for="text-to-edit">Enter your text here:</label>
     <textarea ref="area" required class='text-provider__area' name="text-to-edit" id="text-to-edit"></textarea>
-    <button class="text-provider__bttn" @click="splitWords">Split &amp; count</button>
-    <button class="text-provider__bttn" @click="reseting">Reset</button>
+    <button class="text-provider__bttn">Split &amp; count</button>
+    <button type="reset" class="text-provider__bttn" @click="emptyArr">Reset</button>
   </form>
-  <Formatter ref="compFormatter" :fArray="finalArray" />
+  <OutputWords :words="splitText" />
 </template>
 
-<script>
-import Formatter from '@/components/Formatter.vue'
-import { ref } from '@vue/reactivity';
-import { usePrevention } from './composables/prevent-default.js'
+<script setup>
+import OutputWords from './components/OutputWords.vue'
+import { ref } from '@vue/reactivity'
 
-export default {
-  name: 'App',
-  components: {
-    Formatter
-  },
+const area = ref(null) // referencing textarea in template
+let splitText = ref([]) // creating epmty array to fill with objects containing words in text provided and their number of occurances
 
-  setup() {
-    // variables //
-    let wordArray = []
-    let finalArray = ref([])
-    const area = ref(null)
+const textFormat = textToFormat => { // formatting text - excluding symbols like: "." , " ,", '@' etc. replacing multiple spaces with one and trimming white spaces from beggining and end of the string
+  return textToFormat.replace(/\W/g, ' ').replace(/\s\s+/g, ' ').trim()
+}
 
-    // functions //
+const splitWords = wrd => { // splitting formated text into array of words
+  return textFormat(wrd).split(' ')
+}
 
-    const numering = (a, b) => {
-      return b.count - a.count
-    }
+const wordsGrouping = wrdArr => {  // transfering words into array of objects in formula { name: word, count: numberofappearances }
 
-    const formatText = text => {
-      return text.replace(/\W/g, ' ').replace(/\s\s+/g, ' ').trim()
-    }
+  for (let i = 0; i < wrdArr.length; i++)
 
-    const pushing = (elem) => {
-      finalArray.value.push(
-            {
-              name: elem,
-              count: 1
-            }
-          )
-    }
+    if (!splitText.value.length) { // checking if array provided for objects is empty, if it is providing first object
+      splitText.value.push({
+        name: wrdArr[i],
+        count: 1
+      })
+    } else {
+      let wasFound = false // variable to check if word is already in objects array
 
-    const { prevDefault } = usePrevention()
+      splitText.value.forEach(word => {  // if iterated word does match any name in objects array changing wasFound to true and adding one to number of occurances while also breaking foreach loop
 
-    const splitWords = () => {
-
-      wordArray = []
-      finalArray.value = []
-
-      if (!area.value.value) {
-        return
-      }
-
-      let textToSplit = formatText(area.value.value);
-
-      wordArray = textToSplit.split(' ')
-
-      wordArray.forEach(element => {
-        if (!finalArray.value.length) {
-          pushing(element)
-        } else {
-          let wasFound = false
-
-          finalArray.value.forEach(e => {
-            if (e.name === element) {
-              e.count++
-              wasFound = true
-              return
-            }
-          })
-
-          if (!wasFound) {
-            pushing(element)
-          }
+        if (word.name === wrdArr[i]) {
+          wasFound = true
+          word.count++
+          return
         }
+
       })
 
-      finalArray.value = finalArray.value.sort(numering)
+      if (!wasFound) {  // if word wasnt yet registered in objects array - adding it with a count of 1
+        splitText.value.push({
+          name: wrdArr[i],
+          count: 1
+        })
+      }
 
     }
-
-    const reseting = () => {
-      area.value.value = ''
-    }
-
-    return { splitWords, prevDefault, reseting, area, finalArray }
-
-  }
-
 }
+
+const changeHandler = (textToSplit) => { // event for handling provided text 
+  splitText.value.splice(0)
+  let result = splitWords(textToSplit)
+  wordsGrouping(result)
+}
+
+const emptyArr = () => {  // emptying object array on emptying textarea
+  splitText.value.splice(0)
+}
+
+
 </script>
 
 <style lang="scss">
