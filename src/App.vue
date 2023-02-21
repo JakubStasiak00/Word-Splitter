@@ -5,9 +5,11 @@
   </header>
   <form class="text-provider" name="text-provider" @submit.prevent="changeHandler(area.value)">
     <label class="text-provider__label" for="text-to-edit">Enter your text here:</label>
-    <textarea ref="area" required class='text-provider__area' name="text-to-edit" id="text-to-edit"></textarea>
-    <button class="text-provider__bttn">Split &amp; count</button>
-    <button type="reset" class="text-provider__bttn" @click="emptyArr">Reset</button>
+    <textarea spellcheck="false" ref="area" required class='text-provider__area' name="text-to-edit" id="text-to-edit"></textarea>
+    <div class="bttn-wrapper">
+      <button class="text-provider__bttn">Split &amp; count</button>
+      <button type="reset" class="text-provider__bttn" @click="emptyArr">Reset</button>
+    </div>
   </form>
   <OutputWords :words="splitText" />
 </template>
@@ -33,7 +35,7 @@ const wordsGrouping = wrdArr => {  // transfering words into array of objects in
 
     if (!splitText.value.length) { // checking if array provided for objects is empty, if it is providing first object
       splitText.value.push({
-        name: wrdArr[i],
+        name: wrdArr[i].toLowerCase(),
         count: 1
       })
     } else {
@@ -41,7 +43,7 @@ const wordsGrouping = wrdArr => {  // transfering words into array of objects in
 
       splitText.value.forEach(word => {  // if iterated word does match any name in objects array changing wasFound to true and adding one to number of occurances while also breaking foreach loop
 
-        if (word.name === wrdArr[i]) {
+        if (word.name.toLowerCase() === wrdArr[i].toLowerCase()) {
           wasFound = true
           word.count++
           return
@@ -51,7 +53,7 @@ const wordsGrouping = wrdArr => {  // transfering words into array of objects in
 
       if (!wasFound) {  // if word wasnt yet registered in objects array - adding it with a count of 1
         splitText.value.push({
-          name: wrdArr[i],
+          name: wrdArr[i].toLowerCase(),
           count: 1
         })
       }
@@ -82,7 +84,6 @@ $color-sub: #1d7a44;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 
 .header {
@@ -112,7 +113,7 @@ $color-sub: #1d7a44;
   }
 
   &__area {
-    width: clamp(5rem, 3rem + 80vw, 80%);
+    width: clamp(5rem, 2.5rem + 80vw, 60rem);
     resize: none;
     min-height: 10rem;
     margin-block: 1rem;
@@ -127,7 +128,8 @@ $color-sub: #1d7a44;
     padding: 0.5rem 1rem;
     line-height: 1.3rem;
     margin-bottom: 1rem;
-
+    margin-inline: 1rem ;
+    display: inline-block;
   }
 }
 </style>
