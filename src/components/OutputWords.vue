@@ -5,34 +5,35 @@
         <li><button class="words__item" v-for="word in numberedWords" @click="clickedWord = word.name" :key="word"><span class="words__number">{{ word.count }}</span> {{ word.name }}</button></li>
     </ul>
     <WordInformation @togglePopup="toggleWordInfo" v-if="showInfo" :word="wordToShow" :definition="defToShow" />
+    <div v-if="isError"> couldnt find your word :( try another one </div>
 </template>
 
 <script setup>
 import WordInformation from "./WordInformation.vue"
 import { computed, ref, watch } from "vue"
+import { useWord } from '../composables/getWord.js'
 
 
-    const showInfo = ref(false) // conditionaly render WordInformation component
-    let clickedWord = ref('') // prepare variable to store clicked word to handle watcher
-    const data = ref(null) // store data from fetch request
-    const wordToShow = ref('') // prop for WordInformation storing name of the word
-    const defToShow = ref([]) // prop for WordInformation storing array with word definitions
+    const showInfo = ref(false)
+    let clickedWord = ref('')
+    const wordToShow = ref('')
+    const defToShow = ref(null)
+    const isError = ref(false)
 
-
-    watch(clickedWord, async () => {  // watching clickedWord for changes and requesting word definitions from API to update defToShow
-        if(clickedWord.value === '') { // handling returning variable to starting value to properly execute window closing event in WordInformation
-            return
+    watch(clickedWord, async () => {
+        if(clickedWord.value != '') {
+            const { data, errorMessage } = await useWord(clickedWord.value)
+            if(!errorMessage.value) {
+                isError.value = false
+                console.log(data.value[0].word, data.value[0].meanings)
+                wordToShow.value = data.value[0].word // prop for WordInformation storing name of the word
+                defToShow.value = data.value[0].meanings
+                toggleWordInfo()
+            } else {
+                isError.value = true
+            }
         }
-        const response = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + clickedWord.value)
-        if(!response.ok) { // throwing alert if word searched is not present in API 
-            window.alert('Sorry ! This word isnt clasified in our data')
-            return
-        }
-        data.value = await response.json()
-        wordToShow.value = data.value[0].word
-        defToShow.value = data.value[0].meanings
-        toggleWordInfo()
-        clickedWord.value = '' // setting variable to initial value
+        clickedWord.value = ''
     })
 
     const toggleWordInfo = () => {  // toggling visibility of WordInformation card
