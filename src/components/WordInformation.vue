@@ -35,10 +35,9 @@ const arrayToDisplay = computed( () => {  // preparing array of objects for easi
 
 <style scoped lang="scss">
     .backbone {
-        display: fixed;
         top: 0;
         left: 0;
-        position: absolute;
+        position: fixed;
         width: 100vw;
         height: 100vh;
         background-color: rgba(0, 0, 0, 0.377);
