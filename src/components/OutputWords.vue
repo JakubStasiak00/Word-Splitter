@@ -1,11 +1,11 @@
 <template>
     <label for="providingText"> Filter words: </label><br>
     <input type="text" v-model="inpt" class="providingText" id="providingText" name="providingText">
+    <div v-if="isError"> couldnt find your word :( try another one </div>
     <ul class="words">
         <li><button class="words__item" v-for="word in numberedWords" @click="clickedWord = word.name" :key="word"><span class="words__number">{{ word.count }}</span> {{ word.name }}</button></li>
     </ul>
     <WordInformation @togglePopup="toggleWordInfo" v-if="showInfo" :word="wordToShow" :definition="defToShow" />
-    <div v-if="isError"> couldnt find your word :( try another one </div>
 </template>
 
 <script setup>
