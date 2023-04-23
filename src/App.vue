@@ -1,9 +1,10 @@
 <template>
   <header class="header">
-    <h1 class="appname">Word Splitter</h1>
+    <h1 class="appname"> Word Splitter </h1>
     <p class="subtitle">Extract and count words used in the text the easy way !</p>
   </header>
-  <form class="text-provider" name="text-provider" @submit.prevent="changeHandler(area.value)">
+  <Loading v-if="isPending" />
+  <form class="text-provider" name="text-provider" @submit.prevent="changeStatus(area.value)">
     <label class="text-provider__label" for="text-to-edit">Enter your text here:</label>
     <textarea spellcheck="false" ref="area" required class='text-provider__area' name="text-to-edit" id="text-to-edit"></textarea>
     <div class="bttn-wrapper">
@@ -16,10 +17,13 @@
 
 <script setup>
 import OutputWords from './components/OutputWords.vue'
+import Loading from './components/Loading.vue'
 import { ref } from '@vue/reactivity'
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
 const area = ref(null) // referencing textarea in template
 let splitText = ref([]) // creating epmty array to fill with objects containing words in text provided and their number of occurances
+const isPending = ref(false)
 
 const textFormat = textToFormat => { // formatting text - excluding symbols like: "." , " ,", '@' etc. replacing multiple spaces with one and trimming white spaces from beggining and end of the string
   return textToFormat.replace(/\W/g, ' ').replace(/\s\s+/g, ' ').trim()
@@ -31,37 +35,31 @@ const splitWords = wrd => { // splitting formated text into array of words
 
 const wordsGrouping = wrdArr => {  // transfering words into array of objects in formula { name: word, count: numberofappearances }
 
-  for (let i = 0; i < wrdArr.length; i++)
+  for (let i = 0; i < wrdArr.length; i++) {
+    let wordObj = splitText.value.find(obj => obj.name.toLowerCase() === wrdArr[i].toLowerCase())
 
-    if (!splitText.value.length) { // checking if array provided for objects is empty, if it is providing first object
+    if(wordObj) {
+      wordObj.count++
+    } else {
       splitText.value.push({
-        name: wrdArr[i].toLowerCase(),
+        name: wrdArr[i],
         count: 1
       })
-    } else {
-      let wasFound = false // variable to check if word is already in objects array
-
-      splitText.value.forEach(word => {  // if iterated word does match any name in objects array changing wasFound to true and adding one to number of occurances while also breaking foreach loop
-
-        if (word.name.toLowerCase() === wrdArr[i].toLowerCase()) {
-          wasFound = true
-          word.count++
-          return
-        }
-
-      })
-
-      if (!wasFound) {  // if word wasnt yet registered in objects array - adding it with a count of 1
-        splitText.value.push({
-          name: wrdArr[i].toLowerCase(),
-          count: 1
-        })
-      }
-
     }
+  }
+
+  isPending.value = false
+
+}
+
+const changeStatus = async (x) => {
+  isPending.value = true
+  await delay(10)
+  changeHandler(x)
 }
 
 const changeHandler = (textToSplit) => { // event for handling provided text 
+  console.log(isPending.value)
   splitText.value.splice(0)
   let result = splitWords(textToSplit)
   wordsGrouping(result)
